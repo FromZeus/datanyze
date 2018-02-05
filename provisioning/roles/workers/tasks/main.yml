@@ -1,52 +1,72 @@
 ---
 
-  - include_vars:
-      file: "{{ vars_path }}"
-    tags: always
+- include_vars:
+    file: "{{ vars_path }}"
+  tags: always
 
-  - name: Create uWSGI user
-    user:
-      name: uwsgi
-      groups: adm
-      shell: /sbin/nologin
-      append: yes
-      state: present
+- name: Create uWSGI user
+  user:
+    name: uwsgi
+    groups: adm
+    shell: /sbin/nologin
+    append: yes
+    state: present
 
-  - name: Pre-create dirs
-    file: path={{ item }} owner={{ user }} state=directory
-    with_items: "{{ app_dirs }}"
+###########################
+# Application preparation #
+###########################
 
-  - name: Copy app files
-    copy: src={{ item.src }} dest={{ item.dst }} owner={{ user }}
-    with_items: "{{ app_files }}"
+- name: Pre-create dirs
+  file: path={{ item }} owner={{ user }} state=directory
+  with_items: "{{ app_dirs }}"
 
-  - name: Copy app templates
-    template: src={{ item.src }} dest={{ item.dst }} owner={{ user }}
-    with_items: "{{ app_templates }}"
+- name: Copy app files
+  copy: src={{ item.src }} dest={{ item.dst }} owner={{ user }}
+  with_items: "{{ app_files }}"
 
-  - name: Install pip
-    apt: name=python-pip state=latest
-    register: install_pip
+- name: Copy app templates
+  template: src={{ item.src }} dest={{ item.dst }} owner={{ user }}
+  with_items: "{{ app_templates }}"
 
-  - name: Upgrade pip
-    command: pip install --upgrade pip
-    register: upgrade_pip
-    when: install_pip|succeeded
+####################
+# Pip installation #
+####################
 
-  - name: Install uWSGI
-    pip: name=uwsgi
-    register: install_uwsgi
-    when: install_pip|succeeded
+- name: Install pip
+  apt: name=python-pip state=latest
+  register: install_pip
 
-  - name: Add app init
-    template: src=uwsgi.j2 dest=/etc/init.d/uwsgi mode=+x
-    when: install_uwsgi|succeeded
+- name: Upgrade pip
+  command: pip install --upgrade pip
+  register: upgrade_pip
+  when: install_pip|succeeded
 
-  - name: Update rc
-    command: update-rc.d uwsgi defaults
-    notify:
-      - Start uWSGI
+######################
+# uWSGI installation #
+######################
 
-  - name: Add logrotating
-    template: src=app-logs.j2 dest=/etc/logrotate.d/app
+- name: Install uWSGI
+  pip: name=uwsgi
+  register: install_uwsgi
+  when: install_pip|succeeded
+
+##################
+# System service #
+##################
+
+- name: Add app init
+  template: src=uwsgi.j2 dest=/etc/init.d/uwsgi mode=+x
+  when: install_uwsgi|succeeded
+
+- name: Update rc
+  command: update-rc.d uwsgi defaults
+  notify:
+    - Start uWSGI
+
+###############
+# Logrotating #
+###############
+
+- name: Add logrotating
+  template: src=app-logs.j2 dest=/etc/logrotate.d/app
 

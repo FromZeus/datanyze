@@ -1,42 +1,50 @@
 ---
 
-  - include_vars:
-      file: "{{ vars_path }}"
-    tags: always
+- include_vars:
+    file: "{{ vars_path }}"
+  tags: always
 
-  - name: Add Nginx repo key
-    apt_key:
-      url: "http://nginx.org/keys/nginx_signing.key"
-      state: present
-    register: add_nginx_key
+#####################
+# Nginx preparation #
+#####################
 
-  - name: Add Nginx repo
-    apt_repository:
-      repo: "deb http://nginx.org/packages/mainline/ubuntu/ {{ facts.ansible_facts.ansible_lsb.codename }} nginx"
-      state: present
-    register: add_nginx_repo
-    when: add_nginx_key|succeeded
+- name: Add Nginx repo key
+  apt_key:
+    url: "http://nginx.org/keys/nginx_signing.key"
+    state: present
+  register: add_nginx_key
 
-  - name: Install Nginx
-    apt: name=nginx state=latest
-    when: add_nginx_repo|succeeded
-    register: nginx_installed
-    notify:
-      - Start Nginx
+- name: Add Nginx repo
+  apt_repository:
+    repo: "deb http://nginx.org/packages/mainline/ubuntu/ {{ facts.ansible_facts.ansible_lsb.codename }} nginx"
+    state: present
+  register: add_nginx_repo
+  when: add_nginx_key|succeeded
 
-  - name: Add nginx.conf
-    when: nginx_installed|succeeded
-    template: src={{ nginx_config }} dest=/etc/nginx/nginx.conf
+- name: Install Nginx
+  apt: name=nginx state=latest
+  when: add_nginx_repo|succeeded
+  register: nginx_installed
+  notify:
+    - Start Nginx
 
-  - name: Disable Default Site
-    when: nginx_installed|succeeded
-    file: dest=/etc/nginx/conf.d/default.conf state=absent
+#######################
+# Configs preparation #
+#######################
 
-  - name: Add site configs
-    when: nginx_installed|succeeded
-    register: add_site_configs
-    template: src={{ item.src }} dest={{ item.dst }}
-    with_items: "{{ site_configs }}"
-    notify:
-      - Reload Nginx
+- name: Add nginx.conf
+  when: nginx_installed|succeeded
+  template: src={{ nginx_config }} dest=/etc/nginx/nginx.conf
+
+- name: Disable Default Site
+  when: nginx_installed|succeeded
+  file: dest=/etc/nginx/conf.d/default.conf state=absent
+
+- name: Add site configs
+  when: nginx_installed|succeeded
+  register: add_site_configs
+  template: src={{ item.src }} dest={{ item.dst }}
+  with_items: "{{ site_configs }}"
+  notify:
+    - Reload Nginx
 

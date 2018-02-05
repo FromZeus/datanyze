@@ -1,5 +1,5 @@
 ---
 
-  - name: Start uWSGI
-    service: name=uwsgi state=started enabled=yes
+- name: Start uWSGI
+  service: name=uwsgi state=started enabled=yes
 
