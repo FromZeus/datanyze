@@ -1,0 +1,9 @@
+[uwsgi]
+socket = {{ uwsgi_socket }}
+wsgi-file = {{ wsgi_file }}
+processes = {{ uwsgi_processes }}
+threads = {{ uwsgi_threads }}
+stats = {{ uwsgi_stats }}
+pidfile = {{ uwsgi_pidfile }}
+daemonize = {{ uwsgi_daemonize }}
+uid = {{ user }}

@@ -1,0 +1,13 @@
+---
+
+  - include_vars:
+      file: "{{ vars_path }}"
+    tags: always
+
+  - name: Install unattended-upgrades
+    apt: name=unattended-upgrades state=latest
+    register: unattended_installed
+
+  - name: Configure updates
+    copy: src=10periodic dest=/etc/apt/apt.conf.d/10periodic
+    when: unattended_installed|succeeded

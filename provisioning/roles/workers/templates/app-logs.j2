@@ -1,0 +1,16 @@
+{{ log_dir }}/*.log {
+        daily
+        missingok
+        rotate 52
+        compress
+        delaycompress
+        notifempty
+        create 640 uwsgi adm
+        sharedscripts
+        postrotate
+                if [ -f {{ uwsgi_pidfile }} ]; then
+                        systemctl restart uwsgi
+                fi
+        endscript
+}
+

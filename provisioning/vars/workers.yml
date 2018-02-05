@@ -1,0 +1,27 @@
+---
+
+nginx_config: "nginx.conf.j2"
+site_configs:
+  - {src: "worker.conf.j2", dst: "/etc/nginx/conf.d/worker.conf"}
+
+user: "uwsgi"
+app_dir: "/opt/datanyze"
+log_dir: "/var/log/datanyze-logs"
+app_dirs:
+  - "{{ log_dir }}"
+  - "{{ app_dir }}"
+app_files:
+  - {src: "app.py", dst: "{{ app_dir }}/app.py"}
+app_templates:
+  - {src: "app.ini.j2", dst: "{{ app_dir }}/app.ini"}
+
+uwsgi_socket: "127.0.0.1:8080"
+wsgi_file: "app.py"
+uwsgi_processes: 4
+uwsgi_threads: 2
+uwsgi_stats: "127.0.0.1:9191"
+uwsgi_pidfile: "{{ app_dir }}/app.pid"
+uwsgi_daemonize: "/var/log/datanyze-logs/test-access.log"
+
+start_command: "uwsgi --ini app.ini"
+stop_command: "uwsgi --stop {{ uwsgi_pidfile }}"

@@ -1,0 +1,9 @@
+---
+
+nginx_config: "nginx.conf.j2"
+site_configs:
+  - {src: "loadbalancer.conf.j2", dst: "/etc/nginx/conf.d/loadbalancer.conf"}
+
+backend_hosts:
+  - {ip: "172.16.0.101", port: "80"}
+  - {ip: "172.16.0.102", port: "80"}
